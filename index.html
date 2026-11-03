@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>スケジュール帳</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="app">
+
+    <!-- ヘッダー -->
+    <header class="toolbar">
+      <h1 id="calendarTitle"></h1>
+      <time id="currentTime" class="current-time" aria-label="現在時刻"></time>
+
+      <div class="event-search">
+        <label class="visually-hidden" for="eventSearchInput">予定名・メモを検索</label>
+        <input
+          id="eventSearchInput"
+          type="search"
+          placeholder="予定名・メモを検索"
+          autocomplete="off"
+        >
+        <div id="eventSearchResults" class="event-search-results hidden" role="listbox"></div>
+      </div>
+
+      <div class="navigation">
+        <button id="prevBtn">‹</button>
+        <button id="todayBtn">今日</button>
+        <button id="nextBtn">›</button>
+      </div>
+
+      <div class="view-switch">
+        <button data-view="day">日</button>
+        <button data-view="week">週</button>
+        <button data-view="month" class="active">月</button>
+      </div>
+
+      <label class="line-color-control" for="connectorColor">
+        選択中の線
+        <input id="connectorColor" type="color" value="#2563ed" disabled>
+        <span id="selectedLineLabel">線をクリックして選択</span>
+      </label>
+    </header>
+
+    <!-- カレンダー -->
+    <main class="calendar">
+
+      <!-- 月表示 -->
+      <section id="monthView" class="view">
+        <div class="week-layout month-layout">
+          <div class="month-calendar">
+            <div class="weekdays">
+              <div>日</div>
+              <div>月</div>
+              <div>火</div>
+              <div>水</div>
+              <div>木</div>
+              <div>金</div>
+              <div>土</div>
+            </div>
+
+            <div id="monthGrid" class="month-grid"></div>
+          </div>
+
+          <aside class="week-event-list" aria-label="一か月の予定一覧">
+            <h2>今月の予定</h2>
+            <div id="monthEventListContents"></div>
+            <section class="selected-month-day-events" aria-live="polite">
+              <h2 id="selectedMonthDateTitle">選択した日の予定</h2>
+              <button id="addEventToSelectedMonthDate" class="selected-hour-add-button" type="button">
+                ＋ この日に予定を追加
+              </button>
+              <div id="selectedMonthDateList"></div>
+            </section>
+          </aside>
+        </div>
+
+      </section>
+
+
+      <!-- 週表示 -->
+      <section id="weekView" class="view hidden">
+
+        <div class="week-layout">
+          <div class="week-scroll">
+            <div id="weekContainer" class="week-container"></div>
+          </div>
+
+          <aside class="week-event-list" aria-label="一週間の予定一覧">
+            <h2>今週の予定</h2>
+            <div id="weekEventListContents"></div>
+            <section class="hour-start-events" aria-live="polite">
+              <h2 id="selectedHourTitle">この時間帯に始まる予定</h2>
+              <button id="addEventFromSelectedHour" class="selected-hour-add-button" type="button">
+                ＋ 予定を追加
+              </button>
+              <div id="selectedHourEventContents">
+                <p class="week-event-empty">左の時間を選ぶと予定を表示します</p>
+              </div>
+            </section>
+          </aside>
+        </div>
+
+      </section>
+
+
+      <!-- 日表示 -->
+      <section id="dayView" class="view hidden">
+
+        <input id="dayDate" class="day-date" type="date" aria-label="表示する日付を選択">
+
+        <div id="dayTimeGrid" class="day-time-grid"></div>
+
+      </section>
+
+    </main>
+
+  </div>
+
+
+  <!-- 予定追加・編集モーダル -->
+  <div id="modal" class="modal-overlay hidden">
+
+    <div class="modal">
+
+      <h2 id="modalTitle">予定を追加</h2>
+
+      <form id="eventForm">
+
+        <div class="form-group event-title-group">
+          <label for="eventTitle">予定</label>
+          <input
+            id="eventTitle"
+            type="text"
+            maxlength="100"
+            placeholder="例：会議"
+            autocomplete="off"
+            required
+          >
+          <div id="eventTitleHistory" class="event-title-history hidden" role="listbox"></div>
+        </div>
+
+        <div class="form-group">
+          <label for="eventDate">開始日</label>
+          <input id="eventDate" type="date" required>
+        </div>
+
+        <div class="form-group">
+          <label for="eventTime">開始時刻</label>
+          <input id="eventTime" type="time" required>
+        </div>
+
+        <div class="form-group">
+          <label for="eventEndDate">終了日</label>
+          <input id="eventEndDate" type="date" required>
+        </div>
+
+        <div class="form-group">
+          <label for="eventEndTime">終了時刻</label>
+          <input id="eventEndTime" type="time" required>
+        </div>
+
+        <div class="form-group">
+         <label for="eventGenre">ジャンル</label>
+         <select id="eventGenre" required>
+           <option value="" selected disabled>選択してください</option>
+           <option value="学校">学校</option>
+           <option value="課題">課題</option>
+           <option value="部活">部活</option>
+           <option value="バイト">バイト</option>
+           <option value="遊び">遊び</option>
+           <option value="その他">その他</option>
+         </select>
+        </div>
+
+        <div id="customGenreGroup" class="form-group hidden">
+          <label for="customGenre">ジャンル名</label>
+          <input id="customGenre" type="text" maxlength="30" placeholder="ジャンルを入力（例：通院）">
+        </div>
+
+        <div id="eventBandColorGroup" class="form-group hidden">
+          <label for="eventBandColor">予定の帯の色</label>
+          <input id="eventBandColor" class="event-line-color-input" type="color" value="#2563ed">
+        </div>
+        
+        <div class="form-group">
+          <label for="eventMemo">メモ</label>
+          <textarea
+            id="eventMemo"
+            maxlength="500"
+            placeholder="メモ（任意）"
+          ></textarea>
+        </div>
+
+        <div class="modal-buttons">
+
+          <button
+            type="button"
+            id="deleteBtn"
+            class="delete-button hidden"
+          >
+            削除
+          </button>
+
+          <button
+            type="button"
+            id="cancelBtn"
+          >
+            キャンセル
+          </button>
+
+          <button
+            type="submit"
+            class="save-button"
+          >
+            保存
+          </button>
+
+        </div>
+
+      </form>
+
+    </div>
+
+  </div>
+
+
+  <script src="script.js"></script>
+
+</body>
+</html>
